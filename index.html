@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>jsTree test</title>
+  <!-- 2 load the theme CSS file -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+<!-- Latest compiled and minified CSS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+</head>
+<body style="margin:50px;">
+  <!-- 3 setup a container element -->
+  <div class="btn-toolbar" style="margin-bottom:10px; float:right;">
+            <button type="button" class="btn btn-warning">Merge</button>
+            <button type="button" class="btn btn-danger">Delete</button>
+  </div>
+
+  <div id="jstree"></div>
+  <br>
+  <button type="button" class="btn btn-success btn-block">Generate Files</button>
+
+  <div class="modal fade" id="deleteFolder" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="exampleModalLongTitle">Folder is not empty</h3>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            Do you wish to delete all files inside this folder?
+          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-danger">Delete folder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 include the jQuery library -->
+  <!-- 5 include the minified jstree source -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+  <script>
+  const types = {
+    "explore": ".explore.lkml",
+    "view": ".view.lkml",
+    "dashboard": ".dashboard.lookml",
+    "model": ".model.lkml",
+    "md": ".md",
+    "lkml": ".lkml"
+  }
+
+
+  
+  $(function () {
+    // 6 create an instance when the DOM is ready
+
+    fetch('http://127.0.0.1:8000/data')
+        .then(res => res.json())
+        .then(data => {
+
+    $('#jstree').jstree({
+        "core" : {
+        "data": data,
+      "themes" : { "stripes" : true },
+      "check_callback" : true
+    },
+    
+        "plugins": ["dnd", "checkbox", "types", "search", "sort", "unique", "wholerow", "contextmenu", "changed"],
+        "types": {
+            "explore": {
+                "icon": "glyphicon glyphicon-eye-open"
+            },
+            "view": {
+                "icon": "glyphicon glyphicon-list-alt"
+            },
+            "model": {
+                "icon":"glyphicon glyphicon-home"
+            },
+            "dashboard": {
+                "icon": "glyphicon glyphicon-modal-window"
+            },
+            "md": {
+                "icon": "glyphicon glyphicon-text-background"
+            },
+            "lkml": {
+                "icon": "glyphicon glyphicon-cog"
+            },
+            "other": {
+                "icon": "glyphicon glyphicon-question-sign"
+            }
+        },
+        "checkbox": {
+            "three_state": false,
+            "cascade": "down",
+        },
+        "sort": function(a, b) {
+
+            node1 = this.get_node(a)
+            node2 = this.get_node(b)
+            if (node1.type == "default" && node2.type != "default") {
+                return -1
+            }
+
+            if (node1.type != "default" && node2.type == "default") {
+                return 1
+            }
+
+            else {
+                console.log(node1.text)
+                return node1.text.localeCompare(node2.text)
+            }
+        },
+        "contextmenu":{
+            "items": function($node) {
+        var tree = $("#jstree").jstree(true);
+        if (tree.get_selected().length == 1) {
+            tree.deselect_node($node)
+        }
+        if ($node.type == "default") {
+        return {
+            "Create": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "Create",
+                "action": function (obj) { 
+                    $node = tree.create_node($node);
+                    tree.edit($node);
+                },
+                "submenu": {
+                    "Folder": {
+                        "label": "Folder",
+                        "action": function (obj) {
+                            $node = tree.create_node($node);
+                            tree.edit($node);
+                        }
+                    },
+                    "Explore": {
+                        "label": "Explore",
+                        "action": function (obj) {
+                            $node = tree.create_node($node);
+                            tree.set_type($node, "explore")
+                            tree.edit($node, '.explore.lkml');
+                        }
+                    },
+                    "View": {
+                        "label": "View",
+                        "action": function (obj) {
+                            $node = tree.create_node($node);
+                            tree.set_type($node, "view")
+                            tree.edit($node, '.view.lkml');
+                        }
+                    },
+                    "Model": {
+                        "label": "Model",
+                        "action": function (obj) {
+                            $node = tree.create_node($node);
+                            tree.set_type($node, "model")
+                            tree.edit($node, '.model.lkml');
+                        }
+                    },
+                    "lkml": {
+                        "label": "Generic .lkml file",
+                        "action": function (obj) {
+                            $node = tree.create_node($node);
+                            tree.set_type($node, "lkml")
+                            tree.edit($node, '.lkml');
+                        }
+                    }
+                }
+            },
+            "Rename": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "Rename",
+                "action": function (obj) { 
+                    tree.edit($node, $node.text, (status) => {
+
+
+                        for (const [type, searchString] of Object.entries(types)) {
+                            if ($node.text.includes(searchString)) {
+                                tree.set_type($node, type)
+                                break;
+                            }
+                        }
+
+
+                        if ($node.type != 'default' && Object.keys(types).indexOf($node.type) === -1) {
+                            tree.set_type($node, 'other')
+                        }
+
+
+                    });
+
+                    
+                }
+            },  
+            "Delete": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "Delete",
+                "action": function (obj) { 
+                    if ($node.children.length > 0) {
+                        modal = $('#deleteFolder')
+                        console.log(modal)
+                        modal.modal({ show : true })
+      
+                    }
+                    // tree.delete_node($node);
+                }}                      
+        };}
+        else if ($node.type == "model") {
+            return {
+                "Rename": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "Rename",
+                "action": function (obj) { 
+                    tree.edit($node, $node.text, (status) => {
+
+
+                        for (const [type, searchString] of Object.entries(types)) {
+                            if ($node.text.includes(searchString)) {
+                                tree.set_type($node, type)
+                                break;
+                            }
+                        }
+
+
+                        if ($node.type != 'default' && Object.keys(types).indexOf($node.type) === -1) {
+                            tree.set_type($node, 'other')
+                        }
+
+                    });
+
+                }
+            }, 
+            "Delete": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "Delete",
+                "action": function (obj) { 
+                    tree.delete_node($node);
+                }}, 
+            "Refactor": {
+                "separator_before": true,
+                "separator_after": false,
+                "label": "Refactor",
+                "action": function (obj) { 
+                     
+            }
+            },
+
+        }}
+        else {
+            return {
+                "Rename": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "Rename",
+                "action": function (obj) { 
+                    tree.edit($node, $node.text, (status) => {
+
+
+                        for (const [type, searchString] of Object.entries(types)) {
+                            if ($node.text.includes(searchString)) {
+                                tree.set_type($node, type)
+                                break;
+                            }
+                        }
+
+
+                        if ($node.type != 'default' && Object.keys(types).indexOf($node.type) === -1) {
+                            tree.set_type($node, 'other')
+                        }
+
+
+                    });
+
+                    
+                }
+            }, 
+            "Delete": {
+                "separator_before": false,
+                "separator_after": false,
+                "label": "Delete",
+                "action": function (obj) { 
+                    tree.delete_node($node);
+                }}  
+            }
+        }
+    }
+        }
+
+    });
+    // 7 bind to events triggered on the tree
+    $('#jstree').on("changed.jstree", function (e, data) {
+      console.log(data.selected);
+    });
+  });
+
+})
+
+  </script>
+  <style>
+    li.jstree-closed > i.jstree-icon.jstree-ocl { background:url("glyphicons-arrows-313-rightwards-square-chevron.svg") 0px 0px no-repeat !important; }
+    li.jstree-open > i.jstree-icon.jstree-ocl { background:url("glyphicons-arrows-314-downwards-square-chevron.svg") 0px 0px no-repeat !important; }
+    .glyphicon-eye-open {color:rgb(7, 7, 197);}
+    .glyphicon-list-alt {color:rgb(203, 135, 8);}
+    .glyphicon-home {color:rgb(5, 151, 5)}
+  </style>
+</body>
+</html>
