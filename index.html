@@ -300,11 +300,43 @@
     });
     // 7 bind to events triggered on the tree
     $('#jstree').on("changed.jstree", function (e, data) {
-      console.log(data.selected);
+      console.log(e, data.selected);
     });
   });
 
 })
+
+$('#jstree').on('move_node.jstree', function(e, data) {
+    var tree = $("#jstree").jstree(true);
+    d = {"old_parent": data.old_parent, "new_parent": data.parent, "id": data.node.id}
+    console.log(d)
+    $.ajax({
+        url: '/move',
+        type: 'POST',
+        data: JSON.stringify(d)})
+})
+
+$('#jstree').on('create_node.jstree', function(e, data) {
+    var tree = $("#jstree").jstree(true);
+    id = data.parent + '/' + data.node.text
+    tree.set_id(data.node.id, id)
+})
+
+$('#jstree').on('rename_node.jstree', function(e, data) {
+    var tree = $("#jstree").jstree(true);
+    
+    d = {'id': data.node.id, "parent": data.node., 'new': data.text, 'old': data.old}
+    $.ajax({
+        url: '/rename',
+        type: 'POST',
+        data: JSON.stringify(d)}).then((response) => {
+            console.log(response)
+        })
+
+//         tree.rename_node(data.node.id, data.text)
+ })
+
+
 
   </script>
   <style>

@@ -57,6 +57,7 @@ def get_files(path):
 
 def project_json(files):
     output = []
+    flattened = {}
     tree = {"text": files[0][1].parts[0], "state": {
         "opened": True,
     },
@@ -66,7 +67,7 @@ def project_json(files):
     for abspath, rel in files:
         current = tree
         subpath = ""
-        for idx, segment in enumerate(rel.parts[1:]):
+        for idx, segment in enumerate(rel.parts[1:], start=1):
             if "children" not in current:
                 current["children"] = []
             subpath += "/" + segment
@@ -76,12 +77,14 @@ def project_json(files):
                     filetype = 'default'
                 else:
                     filetype = relpath.suffixes[0].replace('.', '')
-                    
-                helper[subpath] = { "text": segment, "type": filetype, "abspath": Path(*rel.parts[:idx]).as_posix()}
+                id = Path(*rel.parts[:idx+1]).as_posix()
+                helper[subpath] = { "text": segment, "type": filetype, "id": id}
+                flattened[id] = id
                 current["children"].append(helper[subpath])
             current = helper[subpath]
+            
     
-    return tree
+    return tree, flattened
 
 
                 

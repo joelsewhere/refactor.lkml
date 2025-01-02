@@ -13,10 +13,11 @@ root = Path(args.root).resolve()
 
 files = get_files(root)
 print(files)
-json = project_json(files)
+json, flattened = project_json(files)
 print(json)
+print(flattened)
 
-app = project_server(json)
+app = project_server(json, flattened)
 
 
 uvicorn.run(app, host="localhost", port=8000)
