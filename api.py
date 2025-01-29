@@ -52,7 +52,7 @@ def project_server(project_json, flattened):
             flattened[id] = val.replace(old, new)
         
         print(flattened)
-        # if id is not found return indicator to javascript 
+        # TODO: if id is not found return indicator to javascript 
         # so the id can be set for the new node
 
     

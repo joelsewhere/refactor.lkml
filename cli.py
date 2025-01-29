@@ -19,5 +19,7 @@ print(flattened)
 
 app = project_server(json, flattened)
 
+print('json', json)
+
 
 uvicorn.run(app, host="localhost", port=8000)

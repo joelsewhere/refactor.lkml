@@ -15,8 +15,10 @@
   <!-- 3 setup a container element -->
   <div class="btn-toolbar" style="margin-bottom:10px; float:right;">
             <button type="button" class="btn btn-warning">Merge</button>
-            <button type="button" class="btn btn-danger">Delete</button>
+            <button type="button" onclick="delete_selected()" class="btn btn-danger">Delete</button>
   </div>
+
+
 
   <div id="jstree"></div>
   <br>
@@ -55,6 +57,13 @@
     "lkml": ".lkml"
   }
 
+  function delete_selected() {
+    var tree = $("#jstree").jstree()
+    var selected = tree.get_selected([true])
+    selected.forEach((node) => {
+        node.delete_node()
+    })
+  }
 
   
   $(function () {
@@ -71,7 +80,7 @@
       "check_callback" : true
     },
     
-        "plugins": ["dnd", "checkbox", "types", "search", "sort", "unique", "wholerow", "contextmenu", "changed"],
+        "plugins": ["dnd", "types", "search", "sort", "unique", "wholerow", "contextmenu", "changed"],
         "types": {
             "explore": {
                 "icon": "glyphicon glyphicon-eye-open"
@@ -325,7 +334,7 @@ $('#jstree').on('create_node.jstree', function(e, data) {
 $('#jstree').on('rename_node.jstree', function(e, data) {
     var tree = $("#jstree").jstree(true);
     
-    d = {'id': data.node.id, "parent": data.node., 'new': data.text, 'old': data.old}
+    d = {'id': data.node.id, "parent": data.node, 'new': data.text, 'old': data.old}
     $.ajax({
         url: '/rename',
         type: 'POST',

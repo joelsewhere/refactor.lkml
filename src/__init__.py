@@ -42,15 +42,43 @@ IGNORE = [
 
 
 def get_files(path):
+    """
+    ––––––––––––––––––––––––––––––––––––––––-
+                    INPUT
+
+    path--------The pathlib object for
+                the root of a looker project
+    ––––––––––––––––––––––––––––––––––––––––-
+                    OUTPUT
+    [
+        (
+            Pathlib for looker root, 
+            Pathlib for subdirectory of looker root
+            ),
+        
+        (
+            Pathlib for looker root, 
+            Pathlib for subdirectory of looker root
+            ),
+        ]
+    ––––––––––––––––––––––––––––––––––––––––-
+
+    """
+
     paths = []
+    # Generate list of all subfiles
     for p in path.rglob("*"):
+        # boolean to indicate if we should ignore the file
         found_ignore = False
         for ignore in IGNORE:
             if ignore in p.as_posix():
                 found_ignore = True
+
         if not found_ignore:
+            # Drop the root from the path
             root_idx = p.parts.index(path.stem)
             project_p = Path(*p.parts[root_idx:])
+            # Append (Root, Subfile)
             paths.append((p, project_p))
     return paths
 
@@ -58,25 +86,50 @@ def get_files(path):
 def project_json(files):
     output = []
     flattened = {}
-    tree = {"text": files[0][1].parts[0], "state": {
-        "opened": True,
-    },
-    "children": output
-    }
     helper = {}
+
+    # Initial tree
+    tree = {
+        "text": files[0][1].parts[0],
+        "state": {
+            "opened": True,
+            },
+        "children": output
+        }
+    # Loop over all filepaths
     for abspath, rel in files:
         current = tree
+
+        # We will use this as a unique id for each part of the path
         subpath = ""
+
+        # Loop over each part of the filepath excluding the root
+        # because we set it in the initial tree
         for idx, segment in enumerate(rel.parts[1:], start=1):
+
             if "children" not in current:
                 current["children"] = []
+
+            # Add the part to the id
             subpath += "/" + segment
+
+            # If we haven't seen this path yet
+            # it is either a new directory
+            # or a new file in a directory.
             if subpath not in helper:
+                
+                # Conver id to pathlib
                 relpath = Path(segment)
+
+                # If there is no suffix it is a directory
+                # TODO: This can be done more accurately with abspath.is_dir()...right?
                 if not relpath.suffixes:
                     filetype = 'default'
                 else:
+                    # Collect the filetype and remove the period
                     filetype = relpath.suffixes[0].replace('.', '')
+
+                #
                 id = Path(*rel.parts[:idx+1]).as_posix()
                 helper[subpath] = { "text": segment, "type": filetype, "id": id}
                 flattened[id] = id
